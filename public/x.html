@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sender Dashboard</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: 0 auto; background: #fafafa; }
+        .section { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #ddd; }
+        input, textarea, select { width: 100%; padding: 10px; margin: 5px 0 15px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { padding: 10px 20px; cursor: pointer; border: none; border-radius: 5px; color: white; font-weight: bold; width: 100%; }
+        .btn-add { background: #0070f3; }
+        .btn-send { background: #28a745; height: 50px; font-size: 18px; }
+        .btn-del { background: #ff4444; margin-top: 5px; font-size: 12px; }
+        label { font-weight: bold; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <h2>🔔 Notification Center</h2>
+
+    <!-- ADD USER SECTION -->
+    <div class="section">
+        <h3>➕ Add New User</h3>
+        <label>Name (e.g., Girlfriend)</label>
+        <input type="text" id="newName" placeholder="Enter name">
+        
+        <label>Code (Paste what she sent you)</label>
+        <textarea id="newCode" placeholder='{"endpoint": "https://..."}' rows="3"></textarea>
+        
+        <button class="btn-add" onclick="saveUser()">Save User</button>
+    </div>
+
+    <!-- SEND MESSAGE SECTION -->
+    <div class="section">
+        <h3>🚀 Send Message</h3>
+        <label>Select User:</label>
+        <select id="userSelect"></select>
+
+        <label>Message:</label>
+        <textarea id="msgBody" rows="4" placeholder="Type here..."></textarea>
+        
+        <button class="btn-send" onclick="send()">SEND NOTIFICATION</button>
+    </div>
+
+    <!-- MANAGE USERS -->
+    <div class="section">
+        <h3>📝 Saved Users</h3>
+        <ul id="userList" style="padding-left: 20px;"></ul>
+        <button class="btn-del" onclick="clearAll()" style="background:#555">Clear All Data</button>
+    </div>
+
+    <script>
+        // 1. Load users from Phone Storage on startup
+        let users = JSON.parse(localStorage.getItem('notifyUsers')) || [];
+        renderUsers();
+
+        function saveUser() {
+            const name = document.getElementById('newName').value;
+            const codeStr = document.getElementById('newCode').value;
+
+            if(!name || !codeStr) { alert("Fill in both fields!"); return; }
+
+            try {
+                // Check if code is valid JSON
+                const codeObj = JSON.parse(codeStr);
+                
+                users.push({ name: name, sub: codeObj });
+                localStorage.setItem('notifyUsers', JSON.stringify(users));
+                
+                alert("User Saved!");
+                document.getElementById('newName').value = "";
+                document.getElementById('newCode').value = "";
+                renderUsers();
+            } catch (e) {
+                alert("Invalid Code! Make sure you copied the whole thing.");
+            }
+        }
+
+        function renderUsers() {
+            const select = document.getElementById('userSelect');
+            const list = document.getElementById('userList');
+            
+            select.innerHTML = "";
+            list.innerHTML = "";
+
+            if(users.length === 0) {
+                const opt = document.createElement('option');
+                opt.text = "No users saved yet";
+                select.add(opt);
+            }
+
+            users.forEach((u, index) => {
+                // Add to Dropdown
+                const opt = document.createElement('option');
+                opt.value = index;
+                opt.text = u.name;
+                select.add(opt);
+
+                // Add to List at bottom
+                const li = document.createElement('li');
+                li.innerHTML = `${u.name} <button onclick="deleteUser(${index})" style="padding:2px 5px; width:auto; font-size:10px; margin-left:10px; background:red;">X</button>`;
+                list.appendChild(li);
+            });
+        }
+
+        async function send() {
+            if(users.length === 0) { alert("Add a user first!"); return; }
+
+            const userIndex = document.getElementById('userSelect').value;
+            const message = document.getElementById('msgBody').value;
+            const user = users[userIndex];
+
+            if(!message) { alert("Type a message!"); return; }
+
+            const btn = document.querySelector('.btn-send');
+            btn.innerText = "Sending...";
+            btn.disabled = true;
+
+            const res = await fetch('/api/notify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    subscription: user.sub,
+                    message: message
+                })
+            });
+
+            if(res.ok) {
+                alert("Sent to " + user.name + "!");
+                document.getElementById('msgBody').value = "";
+            } else {
+                alert("Error sending.");
+            }
+            
+            btn.innerText = "SEND NOTIFICATION";
+            btn.disabled = false;
+        }
+
+        function deleteUser(index) {
+            if(confirm("Delete this user?")) {
+                users.splice(index, 1);
+                localStorage.setItem('notifyUsers', JSON.stringify(users));
+                renderUsers();
+            }
+        }
+
+        function clearAll() {
+            if(confirm("Delete ALL saved users?")) {
+                localStorage.removeItem('notifyUsers');
+                users = [];
+                renderUsers();
+            }
+        }
+    </script>
+</body>
+  </html>
