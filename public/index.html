@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enable Notifications</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; text-align: center; background: #f0f0f0; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        button { background: #0070f3; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 10px; cursor: pointer; margin-top: 20px; width: 100%; }
+        textarea { width: 100%; height: 150px; margin-top: 15px; font-size: 12px; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+        h1 { color: #333; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🔔 Setup</h1>
+        <p>1. Click the button below.<br>2. Click "Allow" on the popup.<br>3. Copy the weird code and send it to your friend.</p>
+        
+        <button onclick="subscribe()">Enable Notifications</button>
+        
+        <p id="status" style="margin-top:20px; font-weight:bold;"></p>
+        <textarea id="code-box" placeholder="Your code will appear here..." readonly></textarea>
+        <button onclick="copyCode()" id="copy-btn" style="background:#28a745; display:none;">Copy Code</button>
+    </div>
+
+    <script>
+        const publicKey = 'BJYb96vvdeZ6Bp3eZ6XNnVjWVTuli0o-6pdIp4BU1tq4w-u8miNBTXd6WleIfBdSTH4HsMcRHwL9_UoMbQXDLK4';
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
+
+        async function subscribe() {
+            const register = await navigator.serviceWorker.ready;
+            const subscription = await register.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(publicKey)
+            });
+
+            document.getElementById('status').innerText = "✅ Success! Copy this code:";
+            document.getElementById('code-box').value = JSON.stringify(subscription);
+            document.getElementById('copy-btn').style.display = 'block';
+        }
+
+        function copyCode() {
+            const copyText = document.getElementById("code-box");
+            copyText.select();
+            document.execCommand("copy"); // Works on old Androids better than clipboard API
+            alert("Copied! Now paste it in a message to your friend.");
+        }
+
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
+            return outputArray;
+        }
+    </script>
+</body>
+</html>
