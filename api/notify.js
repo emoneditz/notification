@@ -3,8 +3,8 @@ const webPush = require('web-push');
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
-    // 1. Extract 'title' from the request
-    const { subscription, message, icon, title } = req.body;
+    // 1. Get Action and Link from Dashboard
+    const { subscription, message, icon, title, action, link } = req.body;
 
     const publicVapidKey = 'BJYb96vvdeZ6Bp3eZ6XNnVjWVTuli0o-6pdIp4BU1tq4w-u8miNBTXd6WleIfBdSTH4HsMcRHwL9_UoMbQXDLK4';
     const privateVapidKey = 'ctxNre4V43fDkoKERiAQiSf5yjyFCIME5yNw9ctDUPU';
@@ -15,13 +15,13 @@ export default async function handler(req, res) {
       privateVapidKey
     );
 
-    // 2. Logic: If title is empty, use "New Message"
-    const finalTitle = title || 'New Message';
-
+    // 2. Send everything to the phone
     const payload = JSON.stringify({ 
-      title: finalTitle, 
+      title: title || 'New Message', 
       body: message,
-      icon: icon 
+      icon: icon,
+      action: action, // 'close' or 'open'
+      link: link      // The website to open
     });
 
     const options = {
