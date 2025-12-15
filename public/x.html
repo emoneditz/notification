@@ -5,52 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ultimate Control</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: 0 auto; background: #222; color: white; }
-        .section { background: #333; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #444; }
-        input, textarea, select { width: 100%; padding: 10px; margin: 5px 0 15px 0; border: 1px solid #555; border-radius: 5px; background: #111; color: white; box-sizing: border-box; }
-        button { padding: 10px; cursor: pointer; border: none; border-radius: 5px; color: white; font-weight: bold; width: 100%; }
+        body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: 0 auto; background: #1a1a1a; color: #e0e0e0; }
+        h2 { text-align: center; color: #fff; margin-bottom: 30px; }
+        h3 { margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 10px; color: #fff; }
+        .section { background: #2d2d2d; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #444; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        input, textarea, select { width: 100%; padding: 12px; margin: 8px 0 20px 0; border: 1px solid #555; border-radius: 8px; background: #222; color: white; box-sizing: border-box; font-size: 14px; outline: none; }
+        label { font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+        button { padding: 12px; cursor: pointer; border: none; border-radius: 8px; color: white; font-weight: bold; width: 100%; }
+        .btn-send { background: linear-gradient(135deg, #28a745, #218838); height: 50px; font-size: 16px; text-transform: uppercase; }
         .btn-add { background: #0070f3; margin-bottom: 10px; }
-        .btn-send { background: #28a745; height: 50px; font-size: 18px; }
         .btn-icon { background: #e0a800; color: black; }
-        .btn-del { background: #ff4444; font-size: 12px; width: auto; padding: 5px 10px; margin-left: 5px;}
-        .btn-edit { background: #17a2b8; font-size: 12px; width: auto; padding: 5px 10px; margin-left: 10px;}
-        label { font-size: 12px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
-        .icon-preview { width: 30px; height: 30px; vertical-align: middle; border-radius: 5px; margin-right: 10px; background: white; }
-        .row { display: flex; align-items: center; justify-content: space-between; }
-        ul { list-style: none; padding: 0; }
-        li { padding: 10px; border-bottom: 1px solid #444; display: flex; align-items: center; justify-content: space-between; }
+        .btn-del { background: #ff4444; font-size: 12px; width: auto; padding: 6px 12px; margin-left: 8px; }
+        .btn-edit { background: #17a2b8; font-size: 12px; width: auto; padding: 6px 12px; margin-left: auto; }
+        .btn-use { background: #444; font-size: 12px; width: auto; padding: 6px 12px; }
+        .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
         .hidden { display: none; }
+        ul { list-style: none; padding: 0; margin: 0; }
+        li { padding: 12px; border-bottom: 1px solid #444; display: flex; align-items: center; justify-content: space-between; }
+        .icon-preview { width: 32px; height: 32px; object-fit: contain; border-radius: 6px; margin-right: 12px; background: rgba(255,255,255,0.1); padding: 2px; }
+        .toggle-label { display: flex; align-items: center; cursor: pointer; color: #fff; font-size: 14px; }
+        .toggle-label input { width: auto; margin: 0 8px 0 0; }
     </style>
 </head>
 <body>
 
     <h2>👑 Ultimate Control</h2>
 
-    <!-- SEND MESSAGE -->
+    <!-- TRANSMITTER -->
     <div class="section">
         <h3>🚀 Transmit</h3>
         
-        <label>1. Select Target</label>
+        <label>1. Target</label>
         <select id="userSelect" onchange="loadUserPreferences()"></select>
 
         <label>2. Title</label>
         <input type="text" id="msgTitle" placeholder="Default: New Message">
 
-        <label>3. Message Body</label>
-        <textarea id="msgBody" rows="3" placeholder="Type here..."></textarea>
+        <label>3. Message</label>
+        <textarea id="msgBody" rows="3" placeholder="Type message..."></textarea>
 
-        <!-- NEW ACTION SECTION -->
-        <label>4. Click Action</label>
+        <label>4. Action</label>
         <select id="clickAction" onchange="toggleUrlInput()">
             <option value="close">⛔ Do Nothing (Stealth)</option>
             <option value="open">🔗 Open Website</option>
         </select>
         
-        <input type="text" id="clickUrl" class="hidden" placeholder="Enter URL (https://youtube.com...)">
+        <input type="text" id="clickUrl" class="hidden" placeholder="Enter URL (https://...)">
 
-        <div class="row" style="margin-top:15px;">
-            <label>5. Icon:</label>
-            <label style="cursor: pointer;">
+        <div class="row" style="margin-top:15px; margin-bottom: 5px;">
+            <label>5. Icon</label>
+            <label class="toggle-label">
                 <input type="checkbox" id="useIcon" onchange="toggleIcon()" checked> Enable
             </label>
         </div>
@@ -62,132 +66,135 @@
     <!-- ICON LIBRARY -->
     <div class="section">
         <h3>🎨 Icon Library</h3>
-        <label>Add New Icon</label>
+        <label>Add New</label>
         <div class="row">
-            <input type="text" id="iconName" placeholder="Name" style="width: 40%;">
-            <input type="text" id="iconUrl" placeholder="URL" style="width: 58%;">
+            <input type="text" id="iconName" placeholder="Name" style="flex: 1;">
+            <input type="text" id="iconUrl" placeholder="URL" style="flex: 2;">
         </div>
-        <button class="btn-icon" onclick="saveIcon()">Save</button>
-        <div style="margin-top: 15px;">
+        <button class="btn-icon" onclick="saveIcon()">Save to Library</button>
+        
+        <div style="margin-top: 20px; max-height: 300px; overflow-y: auto;">
             <ul id="iconList"></ul>
         </div>
     </div>
 
     <!-- USER MANAGER -->
     <div class="section">
-        <h3>➕ Manage Users</h3>
+        <h3>👥 Manage Users</h3>
+        <label>Add New User</label>
         <input type="text" id="newUserName" placeholder="Name">
-        <textarea id="newUserCode" placeholder="Code..." rows="2"></textarea>
+        <textarea id="newUserCode" placeholder='Paste Code JSON here...' rows="2"></textarea>
         <button class="btn-add" onclick="saveNewUser()">Save User</button>
-        <ul id="manageUserList" style="margin-top:20px;"></ul>
+        <div style="margin-top: 20px;"><ul id="manageUserList"></ul></div>
     </div>
 
     <script>
-        // --- DATA ---
         let users = JSON.parse(localStorage.getItem('notifyUsers')) || [];
-        // Added Pinterest to defaults
+        
+        // --- UPDATED ICONS (The Color Ones) ---
         let icons = JSON.parse(localStorage.getItem('notifyIcons')) || [
             { name: "WhatsApp", url: "https://cdn-icons-png.flaticon.com/512/733/733585.png" },
             { name: "Instagram", url: "https://cdn-icons-png.flaticon.com/512/174/174855.png" },
-            { name: "Pinterest", url: "https://cdn-icons-png.flaticon.com/512/145/145808.png" },
+            { name: "Pinterest", url: "https://cdn-icons-png.flaticon.com/512/145/145808.png" }, // Reverted to Red P
+            { name: "Facebook", url: "https://cdn-icons-png.flaticon.com/512/124/124010.png" },
+            { name: "Messenger", url: "https://cdn-icons-png.flaticon.com/512/5968/5968771.png" }, // Reverted to Gradient
             { name: "Warning", url: "https://cdn-icons-png.flaticon.com/512/564/564619.png" }
         ];
 
         refreshAll();
 
         function refreshAll() {
-            renderUserDropdown();
-            renderManageList();
-            renderIcons();
+            renderUserDropdown(); renderManageList(); renderIcons();
         }
 
-        // --- ACTION LOGIC ---
+        // --- CORE FUNCTIONS ---
         function toggleUrlInput() {
             const action = document.getElementById('clickAction').value;
             const input = document.getElementById('clickUrl');
-            if(action === 'open') {
-                input.style.display = 'block';
-                // If input is empty, maybe fill with default site
-                if(!input.value) input.value = "https://"; 
-            } else {
-                input.style.display = 'none';
-            }
+            input.style.display = (action === 'open') ? 'block' : 'none';
         }
 
-        // --- SEND LOGIC ---
         async function send() {
             const index = document.getElementById('userSelect').value;
-            if(index === "") return alert("No user");
+            if(index === "") return alert("Please select a user.");
 
             const msg = document.getElementById('msgBody').value;
             const title = document.getElementById('msgTitle').value;
-            
-            // Icon
             const useIcon = document.getElementById('useIcon').checked;
             const iconUrl = document.getElementById('currentIconUrl').value;
             const finalIcon = useIcon ? iconUrl : null;
-
-            // Action
             const action = document.getElementById('clickAction').value;
             const link = document.getElementById('clickUrl').value;
 
-            if(!msg) return alert("No message");
-            if(action === 'open' && link.length < 8) return alert("Enter a valid URL!");
+            if(!msg) return alert("Please enter a message.");
 
             const btn = document.querySelector('.btn-send');
-            btn.innerText = "Sending...";
+            const originalText = btn.innerText;
+            btn.innerText = "TRANSMITTING...";
+            btn.style.opacity = "0.7";
 
-            const res = await fetch('/api/notify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    subscription: users[index].sub,
-                    message: msg,
-                    title: title,
-                    icon: finalIcon,
-                    action: action, // Sending Action
-                    link: link      // Sending Link
-                })
-            });
-
-            if(res.ok) alert("Sent! 📡");
-            else alert("Failed");
+            try {
+                const res = await fetch('/api/notify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        subscription: users[index].sub,
+                        message: msg,
+                        title: title,
+                        icon: finalIcon,
+                        action: action,
+                        link: link
+                    })
+                });
+                if(res.ok) alert("✅ Sent Successfully!");
+                else alert("❌ Failed to send.");
+            } catch (e) { alert("❌ Error: " + e.message); }
             
-            btn.innerText = "SEND NOTIFICATION";
+            btn.innerText = originalText;
+            btn.style.opacity = "1";
         }
 
-        // --- STANDARD FUNCTIONS (Same as before) ---
+        // --- LIBRARY LOGIC ---
         function saveIcon() {
-            const name = document.getElementById('iconName').value;
-            const url = document.getElementById('iconUrl').value;
-            if(!name || !url) return alert("Enter Name and URL");
-            icons.push({ name, url });
-            localStorage.setItem('notifyIcons', JSON.stringify(icons));
-            renderIcons();
-            document.getElementById('iconName').value = ""; document.getElementById('iconUrl').value = "";
+            const name = document.getElementById('iconName').value; const url = document.getElementById('iconUrl').value;
+            if(!name || !url) return alert("Fill Name and URL");
+            icons.push({ name, url }); localStorage.setItem('notifyIcons', JSON.stringify(icons)); renderIcons();
+            document.getElementById('iconName').value=""; document.getElementById('iconUrl').value="";
         }
         function renderIcons() {
             const list = document.getElementById('iconList'); list.innerHTML = "";
             icons.forEach((icon, index) => {
                 const li = document.createElement('li');
-                li.innerHTML = `<div style="display:flex; align-items:center;"><img src="${icon.url}" class="icon-preview"><span>${icon.name}</span></div><div><button style="padding:5px; background:#444; color:white;" onclick="selectIcon('${icon.url}')">Use</button><button class="btn-del" onclick="deleteIcon(${index})">❌</button></div>`;
+                li.innerHTML = `<div style="display:flex; align-items:center;"><img src="${icon.url}" class="icon-preview" onerror="this.src='https://via.placeholder.com/30'"><span>${icon.name}</span></div><div><button class="btn-use" onclick="selectIcon('${icon.url}')">Use</button><button class="btn-del" onclick="deleteIcon(${index})">✕</button></div>`;
                 list.appendChild(li);
             });
         }
         function deleteIcon(i) { icons.splice(i, 1); localStorage.setItem('notifyIcons', JSON.stringify(icons)); renderIcons(); }
         function selectIcon(url) { document.getElementById('currentIconUrl').value = url; document.getElementById('useIcon').checked = true; updateUserPref(); }
+
+        // --- USER LOGIC ---
         function saveNewUser() {
             const name = document.getElementById('newUserName').value; const code = document.getElementById('newUserCode').value;
-            if(!name || !code) return;
-            try { users.push({ name, sub: JSON.parse(code), prefIcon: "" }); localStorage.setItem('notifyUsers', JSON.stringify(users)); refreshAll(); 
-            document.getElementById('newUserName').value=""; document.getElementById('newUserCode').value=""; } catch(e) { alert("Invalid Code"); }
+            if(!name || !code) return alert("Fill Name and Code");
+            try { users.push({ name: name, sub: JSON.parse(code), prefIcon: "" }); localStorage.setItem('notifyUsers', JSON.stringify(users)); refreshAll(); document.getElementById('newUserName').value=""; document.getElementById('newUserCode').value=""; } 
+            catch(e) { alert("Invalid Code."); }
         }
         function renderUserDropdown() {
             const select = document.getElementById('userSelect'); const currentVal = select.value; select.innerHTML = "";
-            if(users.length === 0) { select.add(new Option("No users", "")); return; }
+            if(users.length === 0) { select.add(new Option("No users found", "")); return; }
             users.forEach((u, i) => { select.add(new Option(u.name, i)); });
             if(currentVal && users[currentVal]) select.value = currentVal; loadUserPreferences();
         }
+        function renderManageList() {
+            const list = document.getElementById('manageUserList'); list.innerHTML = "";
+            users.forEach((u, i) => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span>${u.name}</span><div style="display:flex;"><button class="btn-edit" onclick="editUser(${i})">✏️</button><button class="btn-del" onclick="deleteUser(${i})">🗑️</button></div>`;
+                list.appendChild(li);
+            });
+        }
+        function deleteUser(i) { if(confirm("Delete " + users[i].name + "?")) { users.splice(i, 1); localStorage.setItem('notifyUsers', JSON.stringify(users)); refreshAll(); } }
+        function editUser(i) { const n = prompt("Edit Name:", users[i].name); if(n) { users[i].name = n; localStorage.setItem('notifyUsers', JSON.stringify(users)); refreshAll(); } }
         function loadUserPreferences() {
             const i = document.getElementById('userSelect').value; if(i === "") return;
             const u = users[i];
@@ -200,16 +207,6 @@
             users[i].prefIcon = isEnabled ? url : ""; localStorage.setItem('notifyUsers', JSON.stringify(users));
         }
         function toggleIcon() { updateUserPref(); }
-        function renderManageList() {
-            const list = document.getElementById('manageUserList'); list.innerHTML = "";
-            users.forEach((u, i) => {
-                const li = document.createElement('li');
-                li.innerHTML = `<span>${u.name}</span><div><button class="btn-edit" onclick="editUser(${i})">✏️</button><button class="btn-del" onclick="deleteUser(${i})">❌</button></div>`;
-                list.appendChild(li);
-            });
-        }
-        function deleteUser(i) { if(confirm("Delete?")) { users.splice(i, 1); localStorage.setItem('notifyUsers', JSON.stringify(users)); refreshAll(); } }
-        function editUser(i) { const n = prompt("Name:", users[i].name); if(n) { users[i].name = n; localStorage.setItem('notifyUsers', JSON.stringify(users)); refreshAll(); } }
     </script>
 </body>
 </html>
