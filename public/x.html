@@ -12,10 +12,13 @@
         .btn-add { background: #0070f3; margin-bottom: 10px; }
         .btn-send { background: #28a745; height: 50px; font-size: 18px; }
         .btn-icon { background: #e0a800; color: black; }
-        .btn-del { background: #ff4444; font-size: 12px; width: auto; padding: 5px 10px; margin-left: 10px;}
+        .btn-del { background: #ff4444; font-size: 12px; width: auto; padding: 5px 10px; margin-left: 5px;}
+        .btn-edit { background: #17a2b8; font-size: 12px; width: auto; padding: 5px 10px; margin-left: 10px;}
         label { font-size: 12px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
         .icon-preview { width: 30px; height: 30px; vertical-align: middle; border-radius: 5px; margin-right: 10px; background: white; }
         .row { display: flex; align-items: center; justify-content: space-between; }
+        ul { list-style: none; padding: 0; }
+        li { padding: 10px; border-bottom: 1px solid #444; display: flex; align-items: center; justify-content: space-between; }
     </style>
 </head>
 <body>
@@ -47,6 +50,20 @@
         <button class="btn-send" onclick="send()">SEND NOTIFICATION</button>
     </div>
 
+    <!-- ADD USER -->
+    <div class="section">
+        <h3>➕ Add User</h3>
+        <input type="text" id="newUserName" placeholder="Name">
+        <textarea id="newUserCode" placeholder="Paste Code JSON..." rows="2"></textarea>
+        <button class="btn-add" onclick="saveNewUser()">Save User</button>
+    </div>
+
+    <!-- MANAGE USERS (EDIT / DELETE) -->
+    <div class="section">
+        <h3>👥 Manage Users</h3>
+        <ul id="manageUserList"></ul>
+    </div>
+
     <!-- ICON LIBRARY -->
     <div class="section">
         <h3>🎨 Icon Library</h3>
@@ -57,16 +74,8 @@
         </div>
         <button class="btn-icon" onclick="saveIcon()">Save to Library</button>
         <div style="margin-top: 15px;">
-            <ul id="iconList" style="padding-left: 0; list-style: none;"></ul>
+            <ul id="iconList"></ul>
         </div>
-    </div>
-
-    <!-- ADD USER -->
-    <div class="section">
-        <h3>➕ Add User</h3>
-        <input type="text" id="newUserName" placeholder="Name">
-        <textarea id="newUserCode" placeholder="Paste Code JSON..." rows="2"></textarea>
-        <button class="btn-add" onclick="saveNewUser()">Save User</button>
     </div>
 
     <script>
@@ -78,8 +87,49 @@
             { name: "Warning", url: "https://cdn-icons-png.flaticon.com/512/564/564619.png" }
         ];
 
-        renderUsers();
-        renderIcons();
+        refreshAll();
+
+        function refreshAll() {
+            renderUserDropdown();
+            renderManageList();
+            renderIcons();
+        }
+
+        // --- MANAGE USERS LOGIC ---
+        function renderManageList() {
+            const list = document.getElementById('manageUserList');
+            list.innerHTML = "";
+            if(users.length === 0) { list.innerHTML = "<li style='color:#777'>No users saved.</li>"; return; }
+
+            users.forEach((u, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span>${u.name}</span>
+                    <div>
+                        <button class="btn-edit" onclick="editUser(${index})">✏️ Edit</button>
+                        <button class="btn-del" onclick="deleteUser(${index})">❌</button>
+                    </div>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function deleteUser(index) {
+            if(confirm("Are you sure you want to delete " + users[index].name + "?")) {
+                users.splice(index, 1);
+                localStorage.setItem('notifyUsers', JSON.stringify(users));
+                refreshAll();
+            }
+        }
+
+        function editUser(index) {
+            const newName = prompt("Enter new name for " + users[index].name + ":", users[index].name);
+            if(newName && newName.trim() !== "") {
+                users[index].name = newName;
+                localStorage.setItem('notifyUsers', JSON.stringify(users));
+                refreshAll();
+            }
+        }
 
         // --- ICON LOGIC ---
         function saveIcon() {
@@ -98,12 +148,15 @@
             list.innerHTML = "";
             icons.forEach((icon, index) => {
                 const li = document.createElement('li');
-                li.style.marginBottom = "5px";
                 li.innerHTML = `
-                    <img src="${icon.url}" class="icon-preview">
-                    <span style="color:white; margin-right:10px;">${icon.name}</span>
-                    <button style="width:auto; padding:5px; background:#444; color:white;" onclick="selectIcon('${icon.url}')">Use</button>
-                    <button class="btn-del" onclick="deleteIcon(${index})">X</button>
+                    <div style="display:flex; align-items:center;">
+                        <img src="${icon.url}" class="icon-preview">
+                        <span>${icon.name}</span>
+                    </div>
+                    <div>
+                        <button style="width:auto; padding:5px; background:#444; color:white;" onclick="selectIcon('${icon.url}')">Use</button>
+                        <button class="btn-del" onclick="deleteIcon(${index})">❌</button>
+                    </div>
                 `;
                 list.appendChild(li);
             });
@@ -129,17 +182,20 @@
             try {
                 users.push({ name: name, sub: JSON.parse(code), prefIcon: "" });
                 localStorage.setItem('notifyUsers', JSON.stringify(users));
-                renderUsers();
+                refreshAll();
                 document.getElementById('newUserName').value = "";
                 document.getElementById('newUserCode').value = "";
             } catch(e) { alert("Invalid Code"); }
         }
 
-        function renderUsers() {
+        function renderUserDropdown() {
             const select = document.getElementById('userSelect');
+            const currentVal = select.value; // Try to keep selection
             select.innerHTML = "";
             if(users.length === 0) { select.add(new Option("No users", "")); return; }
             users.forEach((u, index) => { select.add(new Option(u.name, index)); });
+            
+            if(currentVal && users[currentVal]) select.value = currentVal;
             loadUserPreferences();
         }
 
@@ -173,7 +229,6 @@
             if(index === "") return alert("No user");
 
             const msg = document.getElementById('msgBody').value;
-            // Get the Title
             const title = document.getElementById('msgTitle').value; 
             
             const useIcon = document.getElementById('useIcon').checked;
@@ -191,7 +246,7 @@
                 body: JSON.stringify({
                     subscription: users[index].sub,
                     message: msg,
-                    title: title, // Sending the title!
+                    title: title,
                     icon: finalIcon 
                 })
             });
@@ -203,4 +258,4 @@
         }
     </script>
 </body>
-</html>
+            </html>
