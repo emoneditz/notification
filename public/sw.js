@@ -1,34 +1,39 @@
 // public/sw.js
+
 self.addEventListener('push', function(event) {
   const data = event.data.json();
   
-  // 1. The Big Picture (Right side) - Colorful
-  // If you don't send an icon, it defaults to the Colorful Instagram Logo
-  const bigIcon = data.icon || 'https://cdn-icons-png.flaticon.com/512/174/174855.png';
+  // 1. The Small Badge (Replaces the Bell 🔔)
+  // This is a transparent outline. Android loves this.
+  const instaBadge = 'https://cdn-icons-png.flaticon.com/512/87/87390.png';
 
-  // 2. The Small Badge (Left side / Status Bar) - THE FIX 🔧
-  // This URL is a special "Outline" version of the logo.
-  // It works perfectly in the status bar without turning into a white block.
-  const smallBadge = 'https://cdn-icons-png.flaticon.com/512/87/87390.png';
+  // 2. The Big Icon (Colorful)
+  const instaIcon = 'https://cdn-icons-png.flaticon.com/512/174/174855.png';
 
   const options = {
     body: data.body,
-    icon: bigIcon,  
-    badge: smallBadge, // <--- This changes the Bell 🔔 to the Insta Icon!
+    
+    // Logic: Use your custom icon if you sent one, otherwise use Instagram
+    icon: data.icon || instaIcon,  
+    badge: instaBadge, 
+    
     tag: 'msg',
     renotify: true,
     requireInteraction: true
   };
 
   event.waitUntil(
-    // I set the default title to 'Instagram' so it looks real
     self.registration.showNotification(data.title || 'Instagram', options)
   );
 });
 
-// --- CLICK BEHAVIOR: DO NOTHING ---
+// --- THE IMPORTANT PART ---
+// This handles the click.
 self.addEventListener('notificationclick', function(event) {
-  // Just close the notification.
-  // We removed the 'clients.openWindow' line, so the site will NOT open.
+  // 1. Close the notification instantly.
   event.notification.close();
+
+  // 2. DO NOTHING ELSE.
+  // No clients.openWindow. No URLs. No focus.
+  // The phone will stay exactly where it is.
 });
