@@ -1,39 +1,44 @@
 // public/sw.js
-
 self.addEventListener('push', function(event) {
   const data = event.data.json();
   
-  // 1. The Small Badge (Replaces the Bell 🔔)
-  // This is a transparent outline. Android loves this.
-  const instaBadge = 'https://cdn-icons-png.flaticon.com/512/87/87390.png';
-
-  // 2. The Big Icon (Colorful)
-  const instaIcon = 'https://cdn-icons-png.flaticon.com/512/174/174855.png';
+  // Default Icon (Pinterest style or whatever you want)
+  const defaultIcon = 'https://cdn-icons-png.flaticon.com/512/145/145808.png';
+  const finalIcon = data.icon || defaultIcon;
 
   const options = {
     body: data.body,
-    
-    // Logic: Use your custom icon if you sent one, otherwise use Instagram
-    icon: data.icon || instaIcon,  
-    badge: instaBadge, 
-    
+    icon: finalIcon,  
+    badge: finalIcon, 
     tag: 'msg',
     renotify: true,
-    requireInteraction: true
+    requireInteraction: true,
+    
+    // CRITICAL: We save the Action instructions inside the notification
+    data: {
+        action: data.action, // 'open' or 'close'
+        link: data.link      // The URL
+    }
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Instagram', options)
+    self.registration.showNotification(data.title || 'Notification', options)
   );
 });
 
-// --- THE IMPORTANT PART ---
-// This handles the click.
 self.addEventListener('notificationclick', function(event) {
-  // 1. Close the notification instantly.
   event.notification.close();
 
-  // 2. DO NOTHING ELSE.
-  // No clients.openWindow. No URLs. No focus.
-  // The phone will stay exactly where it is.
+  // Retrieve the saved instructions
+  const payload = event.notification.data;
+
+  // LOGIC:
+  if (payload.action === 'open' && payload.link) {
+      // If mode is 'open', open the link!
+      event.waitUntil(
+        clients.openWindow(payload.link)
+      );
+  } else {
+      // If mode is 'close' (Stealth), DO NOTHING.
+  }
 });
