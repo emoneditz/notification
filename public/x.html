@@ -3,155 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sender Dashboard</title>
+    <title>Master Control</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: 0 auto; background: #fafafa; }
-        .section { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #ddd; }
-        input, textarea, select { width: 100%; padding: 10px; margin: 5px 0 15px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        button { padding: 10px 20px; cursor: pointer; border: none; border-radius: 5px; color: white; font-weight: bold; width: 100%; }
-        .btn-add { background: #0070f3; }
+        body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: 0 auto; background: #222; color: white; }
+        .section { background: #333; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #444; }
+        input, textarea, select { width: 100%; padding: 10px; margin: 5px 0 15px 0; border: 1px solid #555; border-radius: 5px; background: #111; color: white; box-sizing: border-box; }
+        button { padding: 10px; cursor: pointer; border: none; border-radius: 5px; color: white; font-weight: bold; width: 100%; }
+        .btn-add { background: #0070f3; margin-bottom: 10px; }
         .btn-send { background: #28a745; height: 50px; font-size: 18px; }
-        .btn-del { background: #ff4444; margin-top: 5px; font-size: 12px; }
-        label { font-weight: bold; font-size: 14px; }
+        .btn-icon { background: #e0a800; color: black; }
+        .btn-del { background: #ff4444; font-size: 12px; width: auto; padding: 5px 10px; margin-left: 10px;}
+        label { font-size: 12px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+        .icon-preview { width: 30px; height: 30px; vertical-align: middle; border-radius: 5px; margin-right: 10px; background: white; }
+        .row { display: flex; align-items: center; justify-content: space-between; }
     </style>
 </head>
 <body>
 
-    <h2>🔔 Notification Center</h2>
+    <h2>🕹️ Command Center</h2>
 
-    <!-- ADD USER SECTION -->
+    <!-- SEND MESSAGE -->
     <div class="section">
-        <h3>➕ Add New User</h3>
-        <label>Name (e.g., Girlfriend)</label>
-        <input type="text" id="newName" placeholder="Enter name">
+        <h3>🚀 Transmit</h3>
         
-        <label>Code (Paste what she sent you)</label>
-        <textarea id="newCode" placeholder='{"endpoint": "https://..."}' rows="3"></textarea>
+        <label>1. Select Target</label>
+        <select id="userSelect" onchange="loadUserPreferences()"></select>
+
+        <label>2. Title (Optional)</label>
+        <input type="text" id="msgTitle" placeholder="Default: New Message">
+
+        <label>3. Message Body</label>
+        <textarea id="msgBody" rows="3" placeholder="Type here..."></textarea>
+
+        <div class="row">
+            <label>4. Active Icon:</label>
+            <label style="cursor: pointer;">
+                <input type="checkbox" id="useIcon" onchange="toggleIcon()" checked> Enable Icon
+            </label>
+        </div>
         
-        <button class="btn-add" onclick="saveUser()">Save User</button>
-    </div>
-
-    <!-- SEND MESSAGE SECTION -->
-    <div class="section">
-        <h3>🚀 Send Message</h3>
-        <label>Select User:</label>
-        <select id="userSelect"></select>
-
-        <label>Message:</label>
-        <textarea id="msgBody" rows="4" placeholder="Type here..."></textarea>
+        <input type="text" id="currentIconUrl" placeholder="Icon URL..." onchange="updateUserPref()">
         
         <button class="btn-send" onclick="send()">SEND NOTIFICATION</button>
     </div>
 
-    <!-- MANAGE USERS -->
+    <!-- ICON LIBRARY -->
     <div class="section">
-        <h3>📝 Saved Users</h3>
-        <ul id="userList" style="padding-left: 20px;"></ul>
-        <button class="btn-del" onclick="clearAll()" style="background:#555">Clear All Data</button>
+        <h3>🎨 Icon Library</h3>
+        <label>Add New Icon</label>
+        <div class="row">
+            <input type="text" id="iconName" placeholder="Name" style="width: 40%;">
+            <input type="text" id="iconUrl" placeholder="URL (/love.png)" style="width: 58%;">
+        </div>
+        <button class="btn-icon" onclick="saveIcon()">Save to Library</button>
+        <div style="margin-top: 15px;">
+            <ul id="iconList" style="padding-left: 0; list-style: none;"></ul>
+        </div>
+    </div>
+
+    <!-- ADD USER -->
+    <div class="section">
+        <h3>➕ Add User</h3>
+        <input type="text" id="newUserName" placeholder="Name">
+        <textarea id="newUserCode" placeholder="Paste Code JSON..." rows="2"></textarea>
+        <button class="btn-add" onclick="saveNewUser()">Save User</button>
     </div>
 
     <script>
-        // 1. Load users from Phone Storage on startup
+        // --- DATA LOADING ---
         let users = JSON.parse(localStorage.getItem('notifyUsers')) || [];
+        let icons = JSON.parse(localStorage.getItem('notifyIcons')) || [
+            { name: "WhatsApp", url: "https://cdn-icons-png.flaticon.com/512/733/733585.png" },
+            { name: "Instagram", url: "https://cdn-icons-png.flaticon.com/512/174/174855.png" },
+            { name: "Warning", url: "https://cdn-icons-png.flaticon.com/512/564/564619.png" }
+        ];
+
         renderUsers();
+        renderIcons();
 
-        function saveUser() {
-            const name = document.getElementById('newName').value;
-            const codeStr = document.getElementById('newCode').value;
-
-            if(!name || !codeStr) { alert("Fill in both fields!"); return; }
-
-            try {
-                // Check if code is valid JSON
-                const codeObj = JSON.parse(codeStr);
-                
-                users.push({ name: name, sub: codeObj });
-                localStorage.setItem('notifyUsers', JSON.stringify(users));
-                
-                alert("User Saved!");
-                document.getElementById('newName').value = "";
-                document.getElementById('newCode').value = "";
-                renderUsers();
-            } catch (e) {
-                alert("Invalid Code! Make sure you copied the whole thing.");
-            }
+        // --- ICON LOGIC ---
+        function saveIcon() {
+            const name = document.getElementById('iconName').value;
+            const url = document.getElementById('iconUrl').value;
+            if(!name || !url) return alert("Enter Name and URL");
+            icons.push({ name, url });
+            localStorage.setItem('notifyIcons', JSON.stringify(icons));
+            renderIcons();
+            document.getElementById('iconName').value = "";
+            document.getElementById('iconUrl').value = "";
         }
 
-        function renderUsers() {
-            const select = document.getElementById('userSelect');
-            const list = document.getElementById('userList');
-            
-            select.innerHTML = "";
+        function renderIcons() {
+            const list = document.getElementById('iconList');
             list.innerHTML = "";
-
-            if(users.length === 0) {
-                const opt = document.createElement('option');
-                opt.text = "No users saved yet";
-                select.add(opt);
-            }
-
-            users.forEach((u, index) => {
-                // Add to Dropdown
-                const opt = document.createElement('option');
-                opt.value = index;
-                opt.text = u.name;
-                select.add(opt);
-
-                // Add to List at bottom
+            icons.forEach((icon, index) => {
                 const li = document.createElement('li');
-                li.innerHTML = `${u.name} <button onclick="deleteUser(${index})" style="padding:2px 5px; width:auto; font-size:10px; margin-left:10px; background:red;">X</button>`;
+                li.style.marginBottom = "5px";
+                li.innerHTML = `
+                    <img src="${icon.url}" class="icon-preview">
+                    <span style="color:white; margin-right:10px;">${icon.name}</span>
+                    <button style="width:auto; padding:5px; background:#444; color:white;" onclick="selectIcon('${icon.url}')">Use</button>
+                    <button class="btn-del" onclick="deleteIcon(${index})">X</button>
+                `;
                 list.appendChild(li);
             });
         }
 
+        function deleteIcon(index) {
+            icons.splice(index, 1);
+            localStorage.setItem('notifyIcons', JSON.stringify(icons));
+            renderIcons();
+        }
+
+        function selectIcon(url) {
+            document.getElementById('currentIconUrl').value = url;
+            document.getElementById('useIcon').checked = true;
+            updateUserPref();
+        }
+
+        // --- USER LOGIC ---
+        function saveNewUser() {
+            const name = document.getElementById('newUserName').value;
+            const code = document.getElementById('newUserCode').value;
+            if(!name || !code) return;
+            try {
+                users.push({ name: name, sub: JSON.parse(code), prefIcon: "" });
+                localStorage.setItem('notifyUsers', JSON.stringify(users));
+                renderUsers();
+                document.getElementById('newUserName').value = "";
+                document.getElementById('newUserCode').value = "";
+            } catch(e) { alert("Invalid Code"); }
+        }
+
+        function renderUsers() {
+            const select = document.getElementById('userSelect');
+            select.innerHTML = "";
+            if(users.length === 0) { select.add(new Option("No users", "")); return; }
+            users.forEach((u, index) => { select.add(new Option(u.name, index)); });
+            loadUserPreferences();
+        }
+
+        function loadUserPreferences() {
+            const index = document.getElementById('userSelect').value;
+            if(index === "") return;
+            const user = users[index];
+            if(user.prefIcon) {
+                document.getElementById('currentIconUrl').value = user.prefIcon;
+                document.getElementById('useIcon').checked = true;
+            } else {
+                document.getElementById('currentIconUrl').value = "";
+                document.getElementById('useIcon').checked = false;
+            }
+        }
+
+        function updateUserPref() {
+            const index = document.getElementById('userSelect').value;
+            if(index === "") return;
+            const url = document.getElementById('currentIconUrl').value;
+            const isEnabled = document.getElementById('useIcon').checked;
+            users[index].prefIcon = isEnabled ? url : "";
+            localStorage.setItem('notifyUsers', JSON.stringify(users));
+        }
+
+        function toggleIcon() { updateUserPref(); }
+
+        // --- SENDING LOGIC ---
         async function send() {
-            if(users.length === 0) { alert("Add a user first!"); return; }
+            const index = document.getElementById('userSelect').value;
+            if(index === "") return alert("No user");
 
-            const userIndex = document.getElementById('userSelect').value;
-            const message = document.getElementById('msgBody').value;
-            const user = users[userIndex];
+            const msg = document.getElementById('msgBody').value;
+            // Get the Title
+            const title = document.getElementById('msgTitle').value; 
+            
+            const useIcon = document.getElementById('useIcon').checked;
+            const iconUrl = document.getElementById('currentIconUrl').value;
+            const finalIcon = useIcon ? iconUrl : null;
 
-            if(!message) { alert("Type a message!"); return; }
+            if(!msg) return alert("No message");
 
             const btn = document.querySelector('.btn-send');
             btn.innerText = "Sending...";
-            btn.disabled = true;
 
             const res = await fetch('/api/notify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    subscription: user.sub,
-                    message: message
+                    subscription: users[index].sub,
+                    message: msg,
+                    title: title, // Sending the title!
+                    icon: finalIcon 
                 })
             });
 
-            if(res.ok) {
-                alert("Sent to " + user.name + "!");
-                document.getElementById('msgBody').value = "";
-            } else {
-                alert("Error sending.");
-            }
+            if(res.ok) alert("Sent! 📡");
+            else alert("Failed");
             
             btn.innerText = "SEND NOTIFICATION";
-            btn.disabled = false;
-        }
-
-        function deleteUser(index) {
-            if(confirm("Delete this user?")) {
-                users.splice(index, 1);
-                localStorage.setItem('notifyUsers', JSON.stringify(users));
-                renderUsers();
-            }
-        }
-
-        function clearAll() {
-            if(confirm("Delete ALL saved users?")) {
-                localStorage.removeItem('notifyUsers');
-                users = [];
-                renderUsers();
-            }
         }
     </script>
 </body>
-  </html>
+</html>
